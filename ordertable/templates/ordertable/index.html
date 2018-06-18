@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+    </style>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script>
+        $( function() {
+            var table_arr=[];
+            $("#send").hide();
+            $("#datepicker2").change( function() {
+                location.href = "?date=" + $(this).val();
+            });
+            $("#today").click( function() {
+                var d = new Date();
+                var dd = d.getDate();
+                if(dd<10){dd="0"+dd;}
+                var mm = d.getMonth()+1;
+                if(mm<10){mm="0"+mm;}
+                var strdate = ""+d.getFullYear()+"-"+mm+"-"+dd
+                location.href = "?date=" + strdate;
+            });
+            $("#addday").click( function() {
+                var d = new Date(Date.parse("{{ curdate }}"));
+                d.setDate(d.getDate() + 1);
+                var dd = d.getDate();
+                if(dd<10){dd="0"+dd;}
+                var mm = d.getMonth()+1;
+                if(mm<10){mm="0"+mm;}
+                var strdate = ""+d.getFullYear()+"-"+mm+"-"+dd
+                location.href = "?date=" + strdate;
+            });
+            $("#subday").click( function() {
+                var d = new Date(Date.parse("{{ curdate }}"));
+                d.setDate(d.getDate() - 1);
+                var dd = d.getDate();
+                if(dd<10){dd="0"+dd;}
+                var mm = d.getMonth()+1;
+                if(mm<10){mm="0"+mm;}
+                var strdate = ""+d.getFullYear()+"-"+mm+"-"+dd
+                location.href = "?date=" + strdate;
+            });
+            $("div.is_table").click( function() {
+                var tableid=$(this).attr('id');
+                if ($(this).hasClass("selected")) {
+                    $(this).removeClass("selected");
+                    $(this).css("background", "aqua");
+                    var index = table_arr.indexOf(tableid);
+                    table_arr.splice(index,1);
+                    $("#tables_list").val(""+table_arr.join(","));
+                    if(table_arr.length==0){$("#send").hide("slow");}
+                } else {
+                    $(this).addClass("selected");
+                    $(this).css("background", "red");
+                    if($("#send").is(":hidden")){$("#send").show("slow");}
+                    table_arr.push(tableid);
+                    $("#tables_list").val(""+table_arr.join(","));
+                }
+            });
+        } );
+
+    </script>
+</head>
+<body>
+Curdate:
+<input id="datepicker2" type="date" value="{{ curdate }}">
+<button id="subday"> <<< </button>
+<button id="today"> today </button>
+<button id="addday"> >>> </button>
+
+<div style="background: antiquewhite; width: 500px; height: 500px;">
+
+{% if table_list %}
+    {% for table in table_list %}
+        <div id="{{ table.number }}" style="
+                position:relative;
+                width: {{ table.size_h }}%;
+                height: {{ table.size_v }}%;
+                top: {{ table.coord_v }}%;
+                left: {{ table.coord_h }}%;
+                {% if table in av_table_list %}
+                    background: aqua;
+                " class="is_table">
+                {{ table }}
+                {% else %}
+                    background: gray;
+                " class="disabled">
+                    {{ table }}
+                {% endif %}
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No tables are available.</p>
+{% endif %}
+
+</div>
+<div id="send">
+<form id="form-send" method="post">
+    {% csrf_token %}
+    <input id="tables_list" type="hidden" name="table" value="">
+    <input type="hidden" name="curdate" value="{{ curdate }}">
+    Name:
+    <input type="text" name="name" required>
+    e-mail:
+    <input type="email" name="email" required>
+    <input type="submit" name="Send">
+</form>
+</div>
+</body>
+</html>
